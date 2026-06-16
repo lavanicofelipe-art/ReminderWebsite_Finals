@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RemindWeb</title>
+<style>
+  :root{
+    --pink:#f1607d;
+    --yellow:#ffe14d;
+    --green:#5cf0a0;
+    --magenta:#d6336c;
+    --blue:#29c6e8;
+    --dark:#222;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;}
+  body{background:#fff;color:var(--dark);}
+
+  .header{
+    background:var(--pink);
+    color:#fff;
+    padding:30px 20px;
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .header svg.bg{
+    position:absolute;
+    top:0;left:0;width:100%;height:100%;
+    z-index:0;
+    opacity:0.5;
+  }
+  .header h1{
+    font-size:2rem;
+    z-index:1;
+    position:relative;
+  }
+  .sparkle{
+    font-size:1.8rem;
+    z-index:1;
+    position:relative;
+  }
+
+
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:15px;
+    padding:20px;
+  }
+  .stat-card{
+    border-radius:14px;
+    text-align:center;
+    padding:25px 10px;
+  }
+  .stat-card .num{font-size:2.2rem;font-weight:bold;}
+  .stat-card .label{font-size:1rem;}
+  .stat-yellow{background:var(--yellow);}
+  .stat-green{background:var(--green);}
+  .stat-magenta{background:var(--magenta);color:#fff;}
+  .stat-blue{background:var(--blue);}
+
+  
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 20px 15px 20px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .pill{
+    border:none;
+    border-radius:30px;
+    padding:10px 22px;
+    font-weight:bold;
+    font-size:1rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .pill-reminders{
+    background:var(--pink);
+    color:#fff;
+  }
+  .pill-add{
+    background:var(--yellow);
+    color:var(--dark);
+  }
+  .pill-add:hover, .pill-reminders:hover{filter:brightness(1.05);}
+
+ 
+  .reminders{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    padding:0 20px 30px 20px;
+  }
+  .reminder{
+    border:1px solid #ddd;
+    border-left:6px solid var(--blue);
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    gap:12px;
+  }
+  .reminder.category-personal{border-left-color:#a259ff;}
+  .reminder-left{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .check{
+    width:24px;height:24px;
+    border-radius:50%;
+    background:#e6e6e6;
+    flex-shrink:0;
+  }
+  .reminder-title{font-weight:bold;font-size:1.05rem;}
+  .reminder-meta{font-size:0.85rem;color:#999;}
+  .reminder-meta .cat-work{color:#3aa0ff;font-weight:600;}
+  .reminder-meta .cat-personal{color:#a259ff;font-weight:600;}
+  .color-dot{
+    width:16px;height:16px;
+    border-radius:50%;
+    flex-shrink:0;
+  }
+
+ 
+  .footer-bar{
+    height:60px;
+    background:var(--pink);
+  }
+
+  .reminder-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .icon-btn{
+    border:none;
+    background:none;
+    cursor:pointer;
+    font-size:1.1rem;
+    padding:4px;
+    border-radius:6px;
+    color:#888;
+  }
+  .icon-btn:hover{color:var(--dark);background:#f0f0f0;}
+  .icon-btn.delete:hover{color:var(--magenta);}
+
+
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.4);
+    backdrop-filter:blur(6px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+  }
+  .overlay.active{display:flex;}
+  .modal{
+    background:var(--pink);
+    color:#fff;
+    border-radius:18px;
+    padding:30px;
+    width:90%;
+    max-width:420px;
+    position:relative;
+    box-shadow:0 10px 40px rgba(0,0,0,0.3);
+  }
+  .modal h2{margin-bottom:18px;font-size:1.3rem;}
+  .modal label{
+    display:block;
+    margin:14px 0 6px;
+    font-weight:600;
+  }
+  .modal input[type="text"], .modal input[type="date"]{
+    width:100%;
+    border:none;
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:1rem;
+  }
+  .color-options{
+    display:flex;
+    gap:10px;
+    margin-top:8px;
+    flex-wrap:wrap;
+  }
+  .color-swatch{
+    width:30px;height:30px;
+    border-radius:50%;
+    cursor:pointer;
+    border:3px solid transparent;
+  }
+  .color-swatch.selected{border-color:#fff;}
+  .swatch-red{background:#ff4d4d;}
+  .swatch-orange{background:#ffa64d;}
+  .swatch-yellow{background:#ffe14d;}
+  .swatch-green{background:#5cf0a0;}
+  .swatch-blue{background:#29c6e8;}
+  .swatch-purple{background:#a259ff;}
+
+  .close-btn{
+    position:absolute;
+    top:14px;right:18px;
+    background:none;
+    border:none;
+    color:#fff;
+    font-size:1.4rem;
+    cursor:pointer;
+  }
+  .save-btn{
+    margin-top:22px;
+    width:100%;
+    background:#fff;
+    color:var(--pink);
+    border:none;
+    border-radius:30px;
+    padding:12px;
+    font-weight:bold;
+    font-size:1rem;
+    cursor:pointer;
+  }
+
+ 
+  @media (min-width:600px){
+    .modal-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:0 20px;
+    }
+  }
+
+ 
+  @media (max-width:700px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .header h1{font-size:1.5rem;}
+  }
+  @media (max-width:480px){
+    .toolbar{flex-direction:column;align-items:stretch;}
+    .pill{justify-content:center;width:100%;}
+  }
+</style>
+</head>
+<body>
+
+  <header class="header">
+    <span class="sparkle">✨</span>
+    <h1>RemindWeb</h1>
+  </header>
+
+  <section class="stats">
+    <div class="stat-card stat-yellow">
+      <div class="num">6</div>
+      <div class="label">Reminders</div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="num">3</div>
+      <div class="label">Due Today</div>
+    </div>
+    <div class="stat-card stat-magenta">
+      <div class="num">2</div>
+      <div class="label">Failed</div>
+    </div>
+    <div class="stat-card stat-blue">
+      <div class="num">1</div>
+      <div class="label">Done</div>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <button class="pill pill-reminders">🔔 Reminders</button>
+    <button class="pill pill-add" onclick="openModal()">➕ Add Reminder</button>
+  </div>
+
+  <section class="reminders" id="reminderList"></section>
+
+  <div class="footer-bar"></div>
+
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <button class="close-btn" onclick="closeModal()">✕</button>
+      <h2 id="modalTitle">Add Reminder</h2>
+      <input type="hidden" id="editId" value="">
+      <div class="modal-grid">
+        <div>
+          <label for="title">Title:</label>
+          <input type="text" id="title" placeholder="e.g. Pay rent">
+
+          <label for="for">For:</label>
+          <input type="text" id="for" placeholder="e.g. Work / Personal">
+
+          <label for="date">Date:</label>
+          <input type="date" id="date">
+        </div>
+        <div>
+          <label>Color:</label>
+          <div class="color-options">
+            <div class="color-swatch swatch-red selected" onclick="selectColor(this)"></div>
+            <div class="color-swatch swatch-orange" onclick="selectColor(this)"></div>
+            <div class="color-swatch swatch-yellow" onclick="selectColor(this)"></div>
+            <div class="color-swatch swatch-green" onclick="selectColor(this)"></div>
+            <div class="color-swatch swatch-blue" onclick="selectColor(this)"></div>
+            <div class="color-swatch swatch-purple" onclick="selectColor(this)"></div>
+          </div>
+        </div>
+      </div>
+      <button class="save-btn" onclick="saveReminder()">Save Reminder</button>
+    </div>
+  </div>
+
+  <script>
+    const colorMap = {
+      red:'#ff4d4d', orange:'#ffa64d', yellow:'#ffe14d',
+      green:'#5cf0a0', blue:'#29c6e8', purple:'#a259ff'
+    };
+
+    let reminders = [
+      {id:1, title:'Design new application', for:'Work', date:'2026-06-11', color:'green'},
+      {id:2, title:'Create a work flow', for:'Work', date:'2026-06-28', color:'red'},
+      {id:3, title:'Walk the dog', for:'Personal', date:'2026-09-02', color:'yellow'},
+      {id:4, title:'Groceries', for:'Personal', date:'2026-06-11', color:'orange'},
+      {id:5, title:'Anniversary date', for:'Personal', date:'2026-06-11', color:'purple'},
+      {id:6, title:'Create user flow', for:'Work', date:'2026-06-11', color:'blue'}
+    ];
+    let nextId = 7;
+
+    function formatDate(d){
+      const [y,m,day] = d.split('-');
+      const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      return `${months[parseInt(m,10)-1]} ${parseInt(day,10)}, ${y}`;
+    }
+
+    function render(){
+      const list = document.getElementById('reminderList');
+      list.innerHTML = '';
+      reminders.forEach(r=>{
+        const catClass = r.for.toLowerCase() === 'personal' ? 'category-personal' : '';
+        const catLabelClass = r.for.toLowerCase() === 'personal' ? 'cat-personal' : 'cat-work';
+        const div = document.createElement('div');
+        div.className = `reminder ${catClass}`;
+        div.innerHTML = `
+          <div class="reminder-left">
+            <div class="check"></div>
+            <div>
+              <div class="reminder-title">${r.title}</div>
+              <div class="reminder-meta"><span class="${catLabelClass}">${r.for}</span>&nbsp; ${formatDate(r.date)}</div>
+            </div>
+          </div>
+          <div class="reminder-actions">
+            <div class="color-dot" style="background:${colorMap[r.color]};"></div>
+            <button class="icon-btn edit" onclick="editReminder(${r.id})">✏️</button>
+            <button class="icon-btn delete" onclick="deleteReminder(${r.id})">🗑️</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function openModal(){
+      document.getElementById('overlay').classList.add('active');
+    }
+    function closeModal(){
+      document.getElementById('overlay').classList.remove('active');
+      resetForm();
+    }
+    function resetForm(){
+      document.getElementById('editId').value = '';
+      document.getElementById('modalTitle').textContent = 'Add Reminder';
+      document.getElementById('title').value = '';
+      document.getElementById('for').value = '';
+      document.getElementById('date').value = '';
+      document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+      document.querySelector('.swatch-red').classList.add('selected');
+    }
+    function selectColor(el){
+      document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+    function getSelectedColor(){
+      const sel = document.querySelector('.color-swatch.selected');
+      const cls = [...sel.classList].find(c=>c.startsWith('swatch-'));
+      return cls.replace('swatch-','');
+    }
+
+    function saveReminder(){
+      const title = document.getElementById('title').value.trim();
+      const forVal = document.getElementById('for').value.trim();
+      const date = document.getElementById('date').value;
+      const color = getSelectedColor();
+      const editId = document.getElementById('editId').value;
+
+      if(!title || !forVal || !date){
+        alert('Please fill in all fields.');
+        return;
+      }
+
+      if(editId){
+        const r = reminders.find(x=>x.id === parseInt(editId,10));
+        r.title = title; r.for = forVal; r.date = date; r.color = color;
+      } else {
+        reminders.push({id: nextId++, title, for: forVal, date, color});
+      }
+      render();
+      closeModal();
+    }
+
+    function editReminder(id){
+      const r = reminders.find(x=>x.id === id);
+      if(!r) return;
+      document.getElementById('editId').value = r.id;
+      document.getElementById('modalTitle').textContent = 'Edit Reminder';
+      document.getElementById('title').value = r.title;
+      document.getElementById('for').value = r.for;
+      document.getElementById('date').value = r.date;
+      document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+      document.querySelector(`.swatch-${r.color}`).classList.add('selected');
+      openModal();
+    }
+
+    function deleteReminder(id){
+      if(confirm('Delete this reminder?')){
+        reminders = reminders.filter(x=>x.id !== id);
+        render();
+      }
+    }
+
+    document.getElementById('overlay').addEventListener('click', function(e){
+      if(e.target === this) closeModal();
+    });
+
+    render();
+  </script>
+
+</body>
+</html>
